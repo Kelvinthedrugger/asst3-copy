@@ -54,7 +54,9 @@ void exclusive_scan(int* input, int N, int* result)
     // to CUDA kernel functions (that you must write) to implement the
     // scan.
 
-
+    // the CUDA kernel mentioned above will look something like this:
+    // declare with prefix '__global__'?
+    // exclusive_scan_kernel<<<blocks, threadsPerBlock>>>(N, input ,result);
 }
 
 
