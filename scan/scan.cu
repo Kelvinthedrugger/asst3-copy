@@ -59,8 +59,9 @@ __global__ void downsweep_kernel(int N, int *input, int *result, int two_d, int 
     int outidx = index+two_dplus1-1;
     int inidx = index+two_d-1;
     if (outidx < N){
+      int t = input[inidx];
       result[inidx] = input[outidx];
-      result[outidx] += input[inidx];
+      result[outidx] += t;
     }
 }
 
