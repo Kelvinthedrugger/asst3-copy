@@ -46,22 +46,27 @@ static inline int nextPow2(int n) {
 __global__ void upsweep_kernel(int N, int *input, int *result, int two_d, int two_dplus1){
 
     int index = blockIdx.x * blockDim.x + threadIdx.x;
-    int outidx = index+two_dplus1-1;
-    int inidx = index+two_d-1;
-    if (outidx < N)
-      // in-place upsweep
-      input[outidx] += input[inidx];
-
+    if (index < N){
+      result[index] = input[index];
+      int outidx = index+two_dplus1-1;
+      int inidx = index+two_d-1;
+      if (outidx < N)
+        // in-place upsweep
+        result[outidx] += result[inidx];
+    }
 }
+
 __global__ void downsweep_kernel(int N, int *input, int *result, int two_d, int two_dplus1){
 
     int index = blockIdx.x * blockDim.x + threadIdx.x;
-    int outidx = index+two_dplus1-1;
-    int inidx = index+two_d-1;
-    if (outidx < N){
-      int t = input[inidx];
-      result[inidx] = input[outidx];
-      result[outidx] += t;
+    if (index < N){
+      int outidx = index+two_dplus1-1;
+      int inidx = index+two_d-1;
+      if (outidx < N){
+        int t = result[inidx];
+        result[inidx] = result[outidx];
+        result[outidx] += t;
+      }
     }
 }
 
