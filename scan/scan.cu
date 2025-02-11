@@ -42,34 +42,6 @@ static inline int nextPow2(int n) {
 // Also, as per the comments in cudaScan(), you can implement an
 // "in-place" scan, since the timing harness makes a copy of input and
 // places it in result
-
-__global__ void upsweep_kernel(int N, int *input, int *result, int two_d, int two_dplus1){
-
-    int index = blockIdx.x * blockDim.x + threadIdx.x;
-    if (index < N){
-      result[index] = input[index];
-      int outidx = index+two_dplus1-1;
-      int inidx = index+two_d-1;
-      if (outidx < N)
-        // in-place upsweep
-        result[outidx] += result[inidx];
-    }
-}
-
-__global__ void downsweep_kernel(int N, int *input, int *result, int two_d, int two_dplus1){
-
-    int index = blockIdx.x * blockDim.x + threadIdx.x;
-    if (index < N){
-      int outidx = index+two_dplus1-1;
-      int inidx = index+two_d-1;
-      if (outidx < N){
-        int t = result[inidx];
-        result[inidx] = result[outidx];
-        result[outidx] += t;
-      }
-    }
-}
-
 void exclusive_scan(int* input, int N, int* result)
 {
 
@@ -82,38 +54,7 @@ void exclusive_scan(int* input, int N, int* result)
     // to CUDA kernel functions (that you must write) to implement the
     // scan.
 
-    // the CUDA kernel mentioned above will look something like this:
-    // declare with prefix '__global__'?
-    // exclusive_scan_kernel<<<blocks, threadsPerBlock>>>(N, device_input ,device_result);
-    // repeatedly call exclusive_scan_kernel() ?
-    // upsweep
-    // ...
-    // downsweep
-    const int threadsPerBlock = 512;
-    const int blocks = (N + threadsPerBlock - 1) / threadsPerBlock;
 
-    // from exclusive_scan_iterative() (README.md)
-    // upsweep phase
-    for (int two_d = 1; two_d <= N/2; two_d*=2) {
-        int two_dplus1 = 2*two_d;
-        /*parallel_for (int i = 0; i < N; i += two_dplus1) {
-            output[i+two_dplus1-1] += output[i+two_d-1];
-        }*/
-        upsweep_kernel<<<blocks,threadsPerBlock>>>(N, input, result,two_d, two_dplus1);
-    }
-
-    result[N-1] = 0;
-
-    // downsweep phase
-    for (int two_d = N/2; two_d >= 1; two_d /= 2) {
-        int two_dplus1 = 2*two_d;
-        /*parallel_for (int i = 0; i < N; i += two_dplus1) {
-            int t = output[i+two_d-1];
-            output[i+two_d-1] = output[i+two_dplus1-1];
-            output[i+two_dplus1-1] += t;
-        }*/
-        downsweep_kernel<<<blocks,threadsPerBlock>>>(N, input, result, two_d, two_dplus1);
-    }
 }
 
 
